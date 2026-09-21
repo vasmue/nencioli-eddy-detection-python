@@ -1,0 +1,84 @@
+# Configuration for the Nencioli et al. (2010) vector-geometry eddy detection.
+#
+# Reads gridded u/v from netCDF and needs nothing else.  The variable names
+# below are what make it work with any source: FESOM output, AVISO
+# geostrophic velocities, or anything else on a lon/lat grid.
+
+detection:
+  centers_out: /path/to/centers/
+
+  # Variable names in the input files.  These are the names the regridding
+  # writes; for CMEMS/AVISO geostrophic velocities they are ugos, vgos,
+  # longitude, latitude and time.
+  input:
+    u_var: u
+    v_var: v
+    lon_var: LONGITUDE
+    lat_var: LATITUDE
+    time_var: TIME
+
+  # a: grid points for the v and u reversal test; a-1 sets the circuit radius
+  #    for the vector-rotation constraint
+  # b: grid points defining the box searched for the velocity minimum
+  a: 4
+  b: 3
+
+  # Is the grid a rotated one?
+  #   false -> lon/lat in the file are already geographic (AVISO, and any
+  #            ordinary global or regional grid)
+  #   true  -> lon/lat are rotated-frame; geographic coordinates are needed to
+  #            decide cyclonic vs anticyclonic, and are taken from the file's
+  #            Euler attributes if present, otherwise from euler below
+  rotated: true
+  euler: [-90, 90, 90]
+
+  # Region of interest, in geographic coordinates, degrees.  Boxes are OR-ed.
+  # Remove or leave empty to search the whole domain.
+  regions:
+    - name: Eurasian Basin
+      lon: [-80, 160]
+      lat: [77, 90]
+    - name: Canadian Basin west
+      lon: [-180, -80]
+      lat: [85, 90]
+    - name: Canadian Basin east
+      lon: [160, 180]
+      lat: [85, 90]
+
+# Eddy shape, computed from the centers.
+shape:
+  shapes_out: /path/to/shapes/
+
+  # Step between equivalent-elevation contour levels, in metres.  It depends
+  # strongly on the data: check_dz.py finds a suitable value for one day.
+  dz: 0.00025
+
+  # The window is rad = 2a wide to begin with, and is enlarged by fac_step
+  # of that whenever the effective contour reaches its edge.  fac_max is
+  # where the enlarging stops.
+  fac_step: 0.5
+  fac_max: 3.0
+
+  # Closed contours a window must produce around the centre before its
+  # shape is used.  A single contour tells you only that one level happened
+  # to close, and where it sits depends on where the levels fall relative to
+  # the centre rather than on the eddy.
+  min_contours: 2
+
+  # Vertices each contour is resampled to before writing.
+  contour_points: 50
+
+  # Median closed contours per eddy outside this range triggers a warning:
+  # below it dz is probably too coarse, above it finer than needed.
+  contours_warn: [4, 50]
+
+# Which eddies are written for tracking.  Eddies outside these limits stay in
+# eddy_shapes_*.nc, flagged, but are left out of the py-eddy-tracker files.
+tracking:
+  min_rad: 1000       # m, smallest effective radius; smaller is too_small
+  max_err: 70         # %, largest shape error
+
+# Written by the detection, read by the later stages.
+output:
+  time_units: "hours since 1990-01-01 00:00:00"
+  calendar: standard

@@ -1,0 +1,12 @@
+# py-eddy-tracker, kept separate because of its old pins.  Python 3.10 is
+# needed for its polygon3 dependency, and setuptools below 81 for the
+# pkg_resources that its numba version still imports.
+name: py_eddy_tracker
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - setuptools<81
+  - pip:
+      - pyEddyTracker

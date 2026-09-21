@@ -1,0 +1,73 @@
+# Shared configuration for the preparation stage.
+#
+# Read by precompute_weights.py, rotate_regrid_uv.py and validate_regrid.py.
+# The mode, rotation and grid sections are stamped into the weights
+# directory's meta.json when the weights are built; loading weights whose
+# meta.json disagrees with this file raises, so a silent mismatch is not
+# possible.
+
+# What the preparation stage does with the input:
+#
+#   rotate_regrid  unstructured FESOM output, interpolated onto a regular
+#                  grid in a rotated frame.  For the Arctic: moving the pole
+#                  onto the equator keeps the spacing near-uniform and avoids
+#                  the pole singularity.  The target grid is the rotated
+#                  image of a polar cap, so the domain has to be the whole
+#                  cap: left -180, right 180, top 90.
+#
+#   regrid         unstructured FESOM output, interpolated onto a regular
+#                  geographic grid.  For global or mid-latitude runs, where
+#                  there is nothing to rotate away from. Uses grid and
+#                  rotation.mesh_abg; alpha, beta and gamma are ignored.
+#
+#   none           the input is already on a lon/lat grid (AVISO, CMEMS, or
+#                  anything else).  Nothing here applies and the preparation
+#                  scripts have nothing to do; point detection.yaml at the
+#                  files directly.
+mode: rotate_regrid
+
+paths:
+  mesh_path:   /path/to/mesh/          # directory holding fesom.mesh.diag.nc
+  data_path:   /path/to/fesom/output/  # unod.fesom.YYYY.nc, vnod.fesom.YYYY.nc
+  out_root:    /path/to/gridded/       # one subdirectory per year is created
+  weights_dir: /path/to/weights/       # created by precompute_weights.py
+
+rotation:
+  # geographic -> rotated frame ("north pole moved onto the equator").
+  # Used by mode rotate_regrid only.
+  alpha: -90
+  beta:   90
+  gamma:  90
+
+  # FESOM mesh-native vector frame -> geographic.
+  # Node coordinates in fesom.mesh.diag.nc are geographic, but unod/vnod are
+  # stored in the mesh-rotated frame, so this step comes first.  Set to
+  # [0, 0, 0] if a configuration stores velocities already in geographic
+  # components -- that is the identity rotation.  Check D of
+  # validate_regrid.py is the test for this.
+  mesh_abg: [50, 15, -90]
+
+# Target grid.  left/right/bottom/top are the domain in the GEOGRAPHIC frame,
+# degrees.  dx/dy is the spacing in the TARGET frame, so for rotate_regrid it
+# is the spacing around the equator.
+grid:
+  dx: 0.01
+  dy: 0.01
+  left:  -180
+  right:  180
+  bottom:  65
+  top:     90
+
+output:
+  time_units: "hours since 1990-01-01 00:00:00"
+  calendar:   standard
+  overwrite:  true
+
+  # existing files smaller than this are treated as corrupted and rewritten
+  min_valid_mb: 10
+
+  # netCDF4: level 1 keeps most of the size reduction at a fraction of the
+  # CPU, and square chunks suit later window reads around eddy centres
+  complevel:  1
+  chunk_lon:  512
+  chunk_lat:  512

@@ -1,0 +1,15 @@
+# Regridding and detection.  pyfesom2 is needed only for the regridding.
+name: eddy_detection
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.9
+  - numpy
+  - scipy
+  - xarray
+  - netcdf4
+  - pandas
+  - pyyaml
+  - contourpy
+  - matplotlib
+  - pyfesom2
