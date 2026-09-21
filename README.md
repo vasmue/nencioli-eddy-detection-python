@@ -107,6 +107,7 @@ python plot_day.py UV_FILE SHAPES_FILE [--lon MIN MAX] [--lat MIN MAX]
 
 draws speed, velocity arrows and the effective contours: blue for cyclones,
 red for anticyclones, dashed for weak shapes.
+![Eddies detected on one day: speed, velocity, cyclones in blue, anticyclones in red](docs/example_day.png)
 
 ### 3. Tracking
 
